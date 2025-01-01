@@ -1,0 +1,479 @@
+
+<StartScreen>:
+    name: "hello"
+    canvas.before:
+        Color:
+            rgba: 0, 1, 0, 1  # Green background
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'center'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None
+            size: 300, 400  # Fixed layout size
+
+            # Logo Section (Independent of Layout)
+            AnchorLayout:
+                size_hint_y: None
+                height: 200  # Adjust height as needed
+
+                Image:
+                    source: 'logo.png'  # Replace with your logo image path
+                    size_hint: None, None
+                    size: 200,200  # Adjust size as needed
+                    allow_stretch: True
+                    keep_ratio: True
+
+            # App Name Section
+            Label:
+                text: "Your Music"
+                font_size: '24sp'
+                bold: True
+                size_hint_y: None
+                height: 180 # Fixed height for label
+
+            # Start Button Section
+            Button:
+                text: "Start"
+                font_name: "Roboto-Bold.ttf"
+                size_hint_y: None
+                size_hint_x:0.9
+                height: 40
+                on_release:
+                    app.root.current="main"
+
+
+<MainScreen>:
+    name: "main"
+    BoxLayout:
+        orientation: "horizontal"  # Arrange the grids side by side
+
+        # Button Section (GridLayout)
+        GridLayout:
+            canvas:
+                Color:
+                    rgba: 0.2, 0.6, 0.2, 1  # Green background for the button grid
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            padding: 10
+            spacing: 10
+            cols: 1
+            size_hint_x: 0.3  # 30% of the screen width
+
+            Button:
+                text: "Full Screen"
+                size_hint: None, None
+                size: 100, 100
+                on_release:
+                    app.root.current = "full"
+            Button:
+                text: "List Songs"
+                size_hint: None, None
+                size: 100, 100
+                on_release:
+                    root.toggle_song_list()  # Toggle the song list
+
+            Button:
+                text: "Playlist"
+                size_hint: None, None
+                size: 100, 100
+                on_release:
+                    app.root.current = "playlist"
+            Button:
+                text: "Recommendation system"
+                size_hint: None, None
+                size: 200, 100
+                on_release:
+                    app.root.current = "rcmnd"
+
+        # Song List Section (GridLayout)
+        GridLayout:
+            canvas:
+                Color:
+                    rgba: 1, 0.6, 0.2, 1  # Orange background for the song list
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            padding: 10
+            spacing: 10
+            cols: 1
+            size_hint_x: 0.7  # 70% of the screen width
+
+
+
+            RecycleView:
+                id: rv
+                viewclass: "Button"
+
+                RecycleBoxLayout:
+                    default_size: None, 56
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    orientation: 'vertical'
+
+
+
+<FullScreen>:
+    name: "full"
+
+    # Main vertical BoxLayout for the whole screen
+    BoxLayout:
+        orientation: "vertical"
+
+        # Top section (with the back button)
+        BoxLayout:
+            size_hint_y: 0.1  # Define the height for this section (10% of screen height)
+            canvas:
+                Color:
+                    rgba: 1, 0.6, 0.2, 1  # Orange background
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            orientation: "horizontal"
+            padding: 10
+            spacing: 10
+            # Back button
+            BoxLayout:
+                AnchorLayout:
+                    anchor_x: "left"  # Align to the left
+                    anchor_y: "top"   # Align to the top
+                    Button:
+                        text: "<-"
+                        size_hint: None, None
+                        size: 60, 60
+                        on_release:
+                            app.root.current = "main"  # Go back to MainScreen
+
+        # Middle section (with song name label and image)
+        BoxLayout:
+            size_hint_y: 0.7  # Take 70% of the height
+            orientation: "horizontal"  # Split into the main area and the volume slider
+
+            # Main 70% area for label and image
+            BoxLayout:
+                orientation: "vertical"
+                spacing: 10  # Space between the label and image
+                padding: 20
+
+                Label:
+                    id: song_label
+                    text: "No song selected"  # Default text
+                    font_size: "20sp"
+                    color: 1, 0, 0, 1  # Red text
+                    size_hint_y: None
+
+                    size_hint_x:1.225
+                    height: 50
+                    halign: "center"
+
+                Image:
+                    id: image
+                    source: "music_sponge.jpg"
+                    allow_stretch: True
+                    size_hint: None, None
+                    size: "300dp", "300dp"
+                    pos_hint: {"center_x": 0.6}
+
+            # Volume slider box
+            BoxLayout:
+                size_hint_x: 0.2  # Occupy 20% of the width
+                padding: 10
+
+                Slider:
+                    id:slider
+                    orientation: "vertical"  # Vertical slider
+                    min: 0
+                    max: 100
+                    value: 50
+                    size_hint: 1, None
+                    height: 400  # Adjust the height if needed
+                    on_value: root.on_slider_value_change(self, self.value)  # Bind slider value change
+                Label:
+                    text: str(int(slider.value))
+
+        # Bottom section (start page button)
+        BoxLayout:
+            size_hint_y: 0.1  # This section will take 10% of the height
+            canvas:
+                Color:
+                    rgba: 1, 1, 0, 1  # Yellow background
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            orientation: "horizontal"
+            Label:
+                id: play_time
+                orientation:"vertical"
+                text:"0"
+                color:1,0,0,1
+            Slider:
+                id: music
+                min: 0
+                max: 100
+                on_touch_down: if self.collide_point(*args[1].pos): root.start_seeking(args[1])
+                on_touch_up: if self.collide_point(*args[1].pos): root.seek(args[1]) 
+
+
+            Label:
+                id: song_length
+                orientation:"vertical"
+                text:"max"
+                color:1,0,0,1
+
+
+
+
+
+        # Last section (playlist button)
+        BoxLayout:
+            size_hint_y: 0.1  # This section will take 10% of the height
+            canvas:
+                Color:
+                    rgba: 1, 0, 0, 1  # Red background
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            orientation: "horizontal"
+            spacing:10
+            padding:7.5
+
+
+            StackLayout:
+                size_hint_x: None
+                width: self.parent.width * 0.8  # 80% of the width to center the buttons
+                orientation: "lr-tb"  # Left to Right layout
+                 # Space between buttons
+                padding: [30, 0]  # Add some space on the left side of the StackLayout
+
+
+                Button:
+                    text: "Previous"
+                    size_hint: None, None
+                    size: 90, 60
+                    on_release:
+                        root.play_previous()
+
+                Button:
+                    text: "Pause"
+                    size_hint: None, None
+                    size: 120, 60
+                    on_release:
+                        root.pause()
+
+                Button:
+                    text: "Play"
+                    size_hint: None, None
+                    size: 120, 60
+                    on_release:
+                        root.un_pause()
+
+                Button:
+                    text: "Next"
+                    size_hint: None, None
+                    size: 90, 60
+                    on_release:
+                        root.play_next()  # Go to Playlist screen
+
+<Playlist>:
+    name: "playlist"
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [20, 15]
+        spacing: 20
+
+        GridLayout:
+            cols: 2
+            size_hint: 1, None
+            height: self.minimum_height
+            spacing: 15
+
+            TextInput:
+                id: playlist_name_input
+                hint_text: "Enter Playlist Name"
+                size_hint_x: 0.75
+                height: 45
+                font_size: 16
+                multiline: False
+                background_color: 0.9, 0.9, 0.9, 1
+
+            Button:
+                text: "Create Playlist"
+                size_hint_x: 0.25
+                height: 45
+                font_size: 15
+                background_color: 0.2, 0.6, 1, 1
+                color: 1, 1, 1, 1
+                on_release: root.create_playlist(self)
+
+        Label:
+            id: message_label
+            text: ""
+            size_hint_y: None
+            height: 35
+            color: 0.2, 0.6, 1, 1
+            font_size: 15
+            halign: "center"
+            valign: "middle"
+
+        Spinner:
+            id: playlist_spinner
+            text: "Select Playlist"
+            size_hint: None, None
+            size: 260, 50
+            font_size: 16
+            background_color: 0.8, 0.8, 0.8, 1
+            color: 0, 0, 0, 1
+            on_press: root.refresh_playlists()
+
+        FileChooserListView:
+            id: file_chooser
+            size_hint: 1, 0.5
+            filters: ['*.mp3', '*.wav', '*.flac', '*.aac', '*.ogg']
+            path: "Music"
+
+        BoxLayout:
+            orientation: "horizontal"
+            spacing: 15
+            size_hint: 1, None
+            height: 60
+
+            Button:
+                text: "Add Song to Playlist"
+                size_hint: 0.33, 1
+                font_size: 14
+                background_color: 0.3, 0.7, 0.2, 1
+                color: 1, 1, 1, 1
+                on_release: root.add_song_to_playlist(self)
+
+            Button:
+                text: "Play Playlist"
+                size_hint: 0.33, 1
+                font_size: 14
+                background_color: 0.3, 0.7, 0.2, 1
+                color: 1, 1, 1, 1
+                on_release: root.play_playlist(self)
+
+            Button:
+                text: "Stop Playlist"
+                size_hint: 0.33, 1
+                font_size: 14
+                background_color: 0.9, 0.2, 0.2, 1
+                color: 1, 1, 1, 1
+                on_release: root.stop_playlist(self)
+
+        BoxLayout:
+            orientation: "horizontal"
+            spacing: 15
+            size_hint: 1, None
+            height: 60
+
+            Button:
+                text: "Play Next Song"
+                size_hint: 0.5, 1
+                font_size: 14
+                background_color: 0.5, 0.5, 1, 1
+                color: 1, 1, 1, 1
+                on_release: root.play_next_song(self)
+
+            Button:
+                text: "MainScreen"
+                font_name: "Roboto-Bold.ttf"
+                size_hint: 0.25, 1
+                font_size: 14
+                background_color: 0.7, 0.7, 0.7, 1
+                color: 0, 0, 0, 1
+                on_release: app.root.current = "main"
+
+            Button:
+                text: "Recommendation"
+                font_name: "Roboto-Bold.ttf"
+                size_hint: 0.25, 1
+                font_size: 14
+                background_color: 0.7, 0.7, 0.7, 1
+                color: 0, 0, 0, 1
+                on_release: app.root.current = "rcmnd"
+
+<rcmndsys>:
+    name: "rcmnd"
+    BoxLayout:
+        orientation: "horizontal"
+
+        # Left Vertical Grid Section (30%)
+        GridLayout:
+            canvas:
+                Color:
+                    rgba: 0.2, 0.6, 0.2, 1  # Background color for left section
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            cols: 1
+            size_hint_x: 0.3
+            spacing: 10
+            padding: 10
+
+            Button:
+                text: "Show Playlists"
+                size_hint_y: None
+                height: 50
+                on_release: root.show_playlists()
+            Button:
+                text: "Recommend Songs"
+                size_hint_y: None
+                height: 50
+                on_press:root.recommendsong()
+                # Placeholder function for recommend songs action
+            Button:
+                text: "FullScreen"
+                size_hint_y: None
+                height: 50
+                on_release: app.root.current = "full"
+            Button:
+                text: "MainScreen"
+                size_hint_y: None
+                height: 50
+                on_release: app.root.current = "main"
+
+        # Right Section (70%)
+        BoxLayout:
+            orientation: "vertical"
+            size_hint_x: 0.7
+
+            # Playlist Section
+            ScrollView:
+                size_hint_y: 0.5
+                BoxLayout:
+                    orientation: 'vertical'
+                    id: playlist_container
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 10
+                    canvas.before:
+                        Color:
+                            rgba: 1, 0.6, 0.2, 1  # Orange background for playlist section
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
+
+            # Song Section
+            ScrollView:
+                size_hint_y: 0.5
+                BoxLayout:
+                    orientation: 'vertical'
+                    id: song_container
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 10
+                    canvas.before:
+                        Color:
+                            rgba: 0.2, 0.4, 0.8, 1  # Blue background for song section
+                        Rectangle:
+                            pos: self.pos
+                            size: self.size
